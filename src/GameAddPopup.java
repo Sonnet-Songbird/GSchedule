@@ -1,15 +1,18 @@
+//Todo: 선택 입력 사항 폰트 수정
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.DayOfWeek;
 
-public class GameAddPopup extends JPanel {
+public class GameAddPopup extends JDialog {
     private JTextField nameField;
     private JComboBox<DayOfWeek> dayOfWeekComboBox;
     private JTextField resetHourField;
 
-    public GameAddPopup() {
+    public GameAddPopup(MainFrame parentFrame) {
+        super(parentFrame, "게임 추가", true);
         setLayout(new GridLayout(4, 2));
 
         JLabel nameLabel = new JLabel("게임 이름:");
@@ -28,7 +31,6 @@ public class GameAddPopup extends JPanel {
         add(resetHourLabel);
         add(resetHourField);
 
-        JFrame frame = new JFrame("게임 추가");
         JButton addButton = new JButton("게임 추가");
 
         addButton.addActionListener(new ActionListener() {
@@ -36,26 +38,26 @@ public class GameAddPopup extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 Game newGame = getGame();
                 if (newGame != null) {
-
+                    parentFrame.addGame(newGame);
+                    dispose();
                 }
             }
         });
 
-        frame.setLayout(new BorderLayout());
-        frame.add(this, BorderLayout.CENTER);
-        frame.add(addButton, BorderLayout.SOUTH);
-        frame.setSize(300, 200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-        frame.setResizable(false);
+        add(addButton);
 
+        setSize(300, 200);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(parentFrame);
+        setResizable(false);
+        setVisible(true);
     }
 
     public Game getGame() {
         String name = nameField.getText();
         DayOfWeek resetDoW = (DayOfWeek) dayOfWeekComboBox.getSelectedItem();
 
-        int resetHour = 0;
+        int resetHour = 0;// 기본값
         String resetHourText = resetHourField.getText();
 
         if (name != null && !name.trim().isEmpty()) {
@@ -63,15 +65,12 @@ public class GameAddPopup extends JPanel {
                 if (isInteger(resetHourText)) {
                     resetHour = Integer.parseInt(resetHourText);
                 } else {
-                    JOptionPane.showMessageDialog(this, "유효하지 않은 리셋 시간입니다. 유효한 숫자를 입력하세요.");
+                    JOptionPane.showMessageDialog(this, "유효하지 않은 숫자입니다.");
                     return null;
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "리셋 시간을 입력하세요.");
-                return null;
             }
         } else {
-            JOptionPane.showMessageDialog(this, "게임 이름을 입력하세요.");
+            JOptionPane.showMessageDialog(this, "이름은 필수 항목입니다.");
             return null;
         }
 
@@ -88,6 +87,10 @@ public class GameAddPopup extends JPanel {
     }
 
     public static void main(String[] args) {
-        new GameAddPopup();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new MainFrame();
+            }
+        });
     }
 }

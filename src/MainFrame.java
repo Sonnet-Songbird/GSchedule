@@ -1,20 +1,30 @@
+//Todo: 직렬화 / 대상 : Game, Todo클래스, DefaultListModel,JList
+//Todo: 인포 패널 구현
+//Todo: 메인프레임 사이즈 수정(인포패널을 크게)
+
+//Todo: 이하 구현 완료 후 개선사항
+//Todo: 정렬,필터 기능, 미완료만 보기 등
+//Todo: 다중 선택 및 다중 선택 기반의 기능 구현
+/*Todo: --게임--
+        ----Todo----
+        ----Todo----
+        --게임--
+        ----Todo---*/
+//Todo: 게임 더블 클릭 시 해당 게임 탭을 생성하여 해당 게임의 Todo 모아 보기
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 public class MainFrame extends JFrame {
-    private DefaultListModel<Object> todoListModel;
-    private DefaultListModel<Object> gameListModel;
-    private JList<Object> todoJList;
-    private JList<Object> gameJList;
-    private InfoPanel todoInfo;
-    private InfoPanel gameInfo;
-    private JTabbedPane tabbedPane;
-
-    private ArrayList<Game> games;
-    private ArrayList<Todo> todos;
+    private final DefaultListModel<Object> todoListModel;
+    private final DefaultListModel<Object> gameListModel;
+    private final JList<Object> todoJList;
+    private final JList<Object> gameJList;
+    private final InfoPanel todoInfo;
+    private final InfoPanel gameInfo;
+    private final JTabbedPane tabbedPane;
 
     public MainFrame() {
         setTitle("GSchedule");
@@ -43,7 +53,14 @@ public class MainFrame extends JFrame {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                addItem();
+                if (getSelectedTabIndex() == 0) {
+                    if (gameListModel.getSize() != 0)
+                        System.out.println("먼저 게임을 추가 해 주세요.");
+                    else
+                        new TodoAddPopup(MainFrame.this, gameListModel);
+                } else {
+                    new GameAddPopup(MainFrame.this);
+                }
             }
         });
 
@@ -98,9 +115,6 @@ public class MainFrame extends JFrame {
 
         add(mainPanel);
         setVisible(true);
-
-        games = new ArrayList<>();
-        todos = new ArrayList<>();
     }
 
     private JPanel createGamePanel() {
@@ -109,6 +123,7 @@ public class MainFrame extends JFrame {
         gamePanel.add(gameJList, BorderLayout.CENTER);
         return gamePanel;
     }
+
     private JPanel createTodoPanel() {
         JPanel todoPanel = new JPanel(new BorderLayout());
         todoPanel.add(todoInfo.getInfoPanel(), BorderLayout.WEST);
@@ -116,25 +131,12 @@ public class MainFrame extends JFrame {
         return todoPanel;
     }
 
-    private void addItem() {
-        String itemName = (String) JOptionPane.showInputDialog(
-                this, "아이템을 입력하세요:", "아이템 추가", JOptionPane.PLAIN_MESSAGE, null, null, "");
-        if (itemName != null && !itemName.isEmpty()) {
-            if (getSelectedTabIndex() == 0) {
-                Game newGame = new Game(itemName);
-                games.add(newGame);
-                gameListModel.addElement(newGame.getName());
-            } else if (getSelectedTabIndex() == 1) {
-                todos.add(newTodo);
-                todoListModel.addElement(newTodo.getTask());
-            }
-        }
+    public void addGame(Game newGame) {
+        gameListModel.addElement(newGame);
     }
 
-
-    public void addGame(Game newGame) {
-        games.add(newGame);
-        gameListModel.addElement(newGame.getName());
+    public void addTodo(Todo newTodo) {
+        todoListModel.addElement(newTodo);
     }
 
     private void removeItem() {
@@ -144,24 +146,22 @@ public class MainFrame extends JFrame {
                     this, "이 아이템을 삭제하시겠습니까?", "아이템 삭제", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 if (getSelectedTabIndex() == 0) {
-                    games.remove(selectedIndex);
-                    gameListModel.remove(selectedIndex);
-                } else if (getSelectedTabIndex() == 1) {
-                    todos.remove(selectedIndex);
                     todoListModel.remove(selectedIndex);
+                } else if (getSelectedTabIndex() == 1) {
+                    gameListModel.remove(selectedIndex);
                 }
             }
         } else {
             JOptionPane.showMessageDialog(this, "삭제할 아이템을 선택하세요.", "오류", JOptionPane.ERROR_MESSAGE);
         }
-    }
+    } //todo: 탭별 작동 수정, Game 삭제시 하위 전부 날리기
 
     private void countItems() {
         int itemCount;
         if (getSelectedTabIndex() == 0) {
-            itemCount = gameListModel.getSize();
-        } else {
             itemCount = todoListModel.getSize();
+        } else {
+            itemCount = gameListModel.getSize();
         }
         JOptionPane.showMessageDialog(this, "아이템 수: " + itemCount, "아이템 수 세기", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -170,9 +170,9 @@ public class MainFrame extends JFrame {
         int selectedIndex = getSelectedIndex();
         if (selectedIndex != -1) {
             if (getSelectedTabIndex() == 0) {
-                gameListModel.setElementAt("리셋", selectedIndex);
-            } else if (getSelectedTabIndex() == 1) {
                 todoListModel.setElementAt("리셋", selectedIndex);
+            } else if (getSelectedTabIndex() == 1) {
+                gameListModel.setElementAt("리셋", selectedIndex);
             }
         } else {
             JOptionPane.showMessageDialog(this, "리셋할 아이템을 선택하세요.", "오류", JOptionPane.ERROR_MESSAGE);
@@ -183,7 +183,7 @@ public class MainFrame extends JFrame {
         int confirm = JOptionPane.showConfirmDialog(
                 this, "모든 아이템을 리셋하시겠습니까?", "모두 리셋", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            // 모든 item의 객체에 순회하며 reset()
+            //Todo: 모든 item의 객체에 순회하며 reset()
         }
     }
 
