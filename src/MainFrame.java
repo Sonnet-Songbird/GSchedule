@@ -1,4 +1,3 @@
-//Todo: 직렬화 / 대상 : Game, Todo클래스, DefaultListModel,JList
 //Todo: 인포 패널 구현
 //Todo: 메인프레임 사이즈 수정(인포패널을 크게)
 
@@ -16,6 +15,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrame extends JFrame {
     private final DefaultListModel<Object> todoListModel;
@@ -54,7 +57,7 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getSelectedTabIndex() == 0) {
-                    if (gameListModel.getSize() != 0)
+                    if (gameListModel.getSize() == 0)
                         System.out.println("먼저 게임을 추가 해 주세요.");
                     else
                         new TodoAddPopup(MainFrame.this, gameListModel);
@@ -106,8 +109,8 @@ public class MainFrame extends JFrame {
         add(buttonPanel, BorderLayout.EAST);
 
         tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Game", createGamePanel());
         tabbedPane.addTab("TODO", createTodoPanel());
+        tabbedPane.addTab("Game", createGamePanel());
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
@@ -115,6 +118,12 @@ public class MainFrame extends JFrame {
 
         add(mainPanel);
         setVisible(true);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                PersistenceHandler.writeGamesToCSV(getGames());
+            }
+        });
     }
 
     private JPanel createGamePanel() {
@@ -193,11 +202,21 @@ public class MainFrame extends JFrame {
 
     private int getSelectedIndex() {
         if (getSelectedTabIndex() == 0) {
-            return gameJList.getSelectedIndex();
-        } else {
             return todoJList.getSelectedIndex();
+        } else {
+            return gameJList.getSelectedIndex();
         }
     }
+
+    public List<Game> getGames() {
+        List<Game> games = new ArrayList<>();
+        for (int i = 0; i < gameListModel.getSize(); i++) {
+            Object element = gameListModel.getElementAt(i);
+            games.add((Game) element);
+        }
+        return games;
+    }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {

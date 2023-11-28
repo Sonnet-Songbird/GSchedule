@@ -1,9 +1,12 @@
 //Todo: 선택 입력 사항 폰트 수정
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class Todo {
     private Game game;
+    private String gameName; // Game 식별자
+    private final UUID todoID; // to:do 식별자
     private String name;
     private String detail;
     private int goal;
@@ -14,13 +17,20 @@ public class Todo {
 
     public Todo(Game game, String name, int goal, ResetType resetType) {
         this.game = game;
+        this.gameName = game.getName();
         this.name = name;
         this.detail = "";
         this.goal = goal;
         this.count = 0;
         this.recentReset = game.getAdjustedDate();
         this.resetType = resetType;
+        this.todoID = generateUUID();
         game.register(this);
+    }
+
+    public int export() {
+        return 0; //Todo: 저장에 성공하면 목록에 추가, 실패하면 GC
+
     }
 
     public void reset() {
@@ -96,8 +106,16 @@ public class Todo {
         MANUAL      // 수동 초기화
     }
 
+    public UUID getTodoID() {
+        return todoID;
+    }
+
     @Override
     public String toString() {
         return name;
+    }
+
+    public static UUID generateUUID() {
+        return UUID.randomUUID();
     }
 }
