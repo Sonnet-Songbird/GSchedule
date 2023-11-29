@@ -1,4 +1,5 @@
 //Todo: 선택 입력 사항 폰트 수정
+//Todo: Game/Todo 둘 다 시간이나 횟수 등은 spinner로 교체
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,7 +90,7 @@ public class GameAddPopup extends JDialog {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                MainFrame.getInstance();
+                MainFrame.getMainFrame();
             }
         });
     }

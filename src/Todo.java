@@ -114,11 +114,11 @@ public class Todo {
     }
 
     public enum ResetType {
-        DAILY,      // 일일 초기화
-        WEEKLY,     // 주간 초기화
-        MONTHLY,    // 월간 초기화
-        ALWAYS,     // 항상 초기화
-        MANUAL      // 수동 초기화
+        DAILY,
+        WEEKLY,
+        MONTHLY,
+        NORMAL
+
     }
 
     public UUID getTodoID() {
@@ -133,4 +133,5 @@ public class Todo {
     public static UUID generateUUID() {
         return UUID.randomUUID();
     }
+
 }

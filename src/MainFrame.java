@@ -1,8 +1,9 @@
 //Todo: 인포 패널 구현
 //Todo: 메인프레임 사이즈 수정(인포패널을 크게)
-
 //Todo: 이하 구현 완료 후 개선사항
-//Todo: 정렬,필터 기능, 미완료만 보기 등
+//Todo: JList에 출력하는 이름을
+//Todo: 정렬,필터 기능, 미완료만 보기 등. 현재 JList 인덱스를 참조하는 방식도 수정해야 함.
+//Todo:
 //Todo: 다중 선택 및 다중 선택 기반의 기능 구현
 /*Todo: --게임--
         ----Todo----
@@ -11,6 +12,7 @@
         ----Todo---*/
 //Todo: 게임 더블 클릭 시 해당 게임 탭을 생성하여 해당 게임의 Todo 모아 보기
 //Todo: 로거 사용
+//Todo: 미완료 상태로 초기화된 경우 알려주기?
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainFrame extends JFrame {
-    private static MainFrame instance;
+    private static MainFrame mainFrame;
     private final DefaultListModel<Object> todoListModel;
     private final DefaultListModel<Object> gameListModel;
     private final JList<Object> todoJList;
@@ -60,7 +62,7 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getSelectedTabIndex() == 0) {
-                    if (gameListModel.getSize() == 0) System.out.println("먼저 게임을 추가 해 주세요.");
+                    if (gameListModel.getSize() == 0) JOptionPane.showMessageDialog(mainFrame, "먼저 게임을 추가 해 주세요.");
                     else new TodoAddPopup(MainFrame.this, gameListModel);
                 } else {
                     new GameAddPopup(MainFrame.this);
@@ -127,11 +129,11 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    public static MainFrame getInstance() {
-        if (instance == null) {
-            instance = new MainFrame();
+    public static MainFrame getMainFrame() {
+        if (mainFrame == null) {
+            mainFrame = new MainFrame();
         }
-        return instance;
+        return mainFrame;
     }
 
     private JPanel createGamePanel() {
@@ -194,11 +196,14 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "리셋할 아이템을 선택하세요.", "오류", JOptionPane.ERROR_MESSAGE);
         }
     }
+    // Todo:기간반복 item의 경우 초기화를 시도하면 자동 reset 조건 클리어 여부에 따라 확인 메세지 출력.
+    // Todo:잘못 초기화 한 경우 취소 기능. Count가 0일시 취소 버튼으로 바뀌고 Todo 클래스의 메소드에서 멤버변수로 리셋 전 count저장해둬서 롤백.
+    // Todo:선택된 item이 게임인 경우 뭔가 다른 버튼으로 바꿔볼까?
 
     private void resetAllItems() {
         int confirm = JOptionPane.showConfirmDialog(this, "모든 아이템을 리셋하시겠습니까?", "모두 리셋", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            //Todo: 모든 item의 객체에 순회하며 reset()
+            //Todo: 모든 item의 객체에 순회하며 resetAll()
         }
     }
 
@@ -234,6 +239,6 @@ public class MainFrame extends JFrame {
 
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MainFrame::getInstance);
+        SwingUtilities.invokeLater(MainFrame::getMainFrame);
     }
 }

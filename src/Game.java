@@ -9,14 +9,14 @@ public class Game {
     private String name; // 식별자
     private DayOfWeek resetDoW;
     private int resetHour;
-    private ArrayList<Todo> todo;
+    private ArrayList<Todo> todos;
     private ArrayList<UUID> todoIDs;
 
     public Game(String name, DayOfWeek resetDoW, int resetHour) {
         this.name = name;
         this.resetDoW = resetDoW;
         this.resetHour = resetHour;
-        this.todo = new ArrayList<>();
+        this.todos = new ArrayList<>();
         this.todoIDs = new ArrayList<>();
     }
 
@@ -24,13 +24,17 @@ public class Game {
         this.name = name;
         this.resetDoW = resetDoW;
         this.resetHour = resetHour;
-        this.todo = new ArrayList<>();
+        this.todos = new ArrayList<>();
         this.todoIDs = todoIDs;
     }
 
     public void register(Todo todo) {
-        this.todo.add(todo);
+        this.todos.add(todo);
         this.todoIDs.add(todo.getTodoID());
+    }
+
+    public void resetIDs() {
+        this.todoIDs = new ArrayList<>();
     }
 
     public LocalDate getAdjustedDate() {
@@ -60,9 +64,10 @@ public class Game {
         return resetHour;
     }
 
-    public ArrayList<Todo> getTodo() {
-        return todo;
+    public ArrayList<Todo> getTodos() {
+        return todos;
     }
+
 
     public ArrayList<UUID> getTodoIDs() {
         return todoIDs;
@@ -78,7 +83,7 @@ public class Game {
 
     public void matchTodoWithID() {
         for (UUID todoID : todoIDs) {
-            //todo: todo 로드 떄 todoID를 키로 하는 Map 넘겨받아서 순회하면서 todo에 추가
+            //todos: todos 로드 떄 todoID를 키로 하는 Map 넘겨받아서 순회하면서 todo에 추가
         }
     }
 }

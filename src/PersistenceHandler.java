@@ -11,9 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class PersistenceHandler {
     private final MainFrame mainFrame;
@@ -21,9 +19,13 @@ public class PersistenceHandler {
 
     private static final String GAME_FILE_PATH = "Game.csv";
     private static final String TODO_FILE_PATH = "Todo.csv";
+    private final boolean GAME_FILE_EXIST;
+    private final boolean TODO_FILE_EXIST;
 
     private PersistenceHandler(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
+        GAME_FILE_EXIST = Files.exists(Path.of(GAME_FILE_PATH));
+        TODO_FILE_EXIST = Files.exists(Path.of(TODO_FILE_PATH));
     }
 
     public static PersistenceHandler getInstance(MainFrame mainFrame) {
@@ -33,12 +35,12 @@ public class PersistenceHandler {
         return instance;
     }
 
-    private static CSVPrinter gameCSVPrinter() throws IOException {
+    private CSVPrinter gameCSVPrinter() throws IOException {
         FileWriter fileWriter = new FileWriter(GAME_FILE_PATH);
         return new CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("Name", "ResetDayOfWeek", "ResetHour", "TodoIDs"));
     }
 
-    public static void writeGamesToCSV(List<Game> games) {
+    public void writeGamesToCSV(List<Game> games) {
         try (CSVPrinter csvPrinter = gameCSVPrinter()) {
             for (Game game : games) {
                 csvPrinter.printRecord(game.getName(), game.getResetDoW(), game.getResetHour(), game.getTodoIDsAsString());
@@ -46,33 +48,37 @@ public class PersistenceHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //Todo: 나중에 tmp파일을 만들어 예외발생시 예전 파일로 롤백하도록 구현
     }
 
     //todo: readGamesFromCSV, parseGames try문 정리
-    public static List<Game> readGamesFromCSV() {
-        List<Game> games = new ArrayList<>();
+    public Map<String, Game> readGamesFromCSV() {
+        Map<String, Game> gameMap = new HashMap<>();
 
         try (FileReader fileReader = new FileReader(GAME_FILE_PATH); CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
             for (CSVRecord record : csvParser) {
                 Game game = parseGames(record);
-                games.add(game);
+                gameMap.put(game.getName(), game);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return games;
+        return gameMap;
     }
 
-    private static Game parseGames(CSVRecord record) {
+    private Game parseGames(CSVRecord record) {
+        ArrayList<UUID> todoIDs;
         String name = record.get("Name");
         DayOfWeek resetDoW = DayOfWeek.valueOf(record.get("ResetDayOfWeek"));
         int resetHour = Integer.parseInt(record.get("ResetHour"));
-        ArrayList<UUID> todoIDs = parseTodoIDs(record.get("TodoIDs"));
+        if (TODO_FILE_EXIST) // TODO를 불러오지 못할 경우 쓰레기 값을 생성하지 않음.
+            todoIDs = parseTodoIDs(record.get("TodoIDs"));
+        else todoIDs = null;
         return new Game(name, resetDoW, resetHour, todoIDs);
     }
 
-    private static ArrayList<UUID> parseTodoIDs(String string) {
+    private ArrayList<UUID> parseTodoIDs(String string) {
 
         ArrayList<UUID> todoIDs = new ArrayList<>();
 
@@ -87,12 +93,12 @@ public class PersistenceHandler {
         return todoIDs;
     }
 
-    private static CSVPrinter todoCSVPrinter() throws IOException {
+    private CSVPrinter todoCSVPrinter() throws IOException {
         FileWriter fileWriter = new FileWriter(TODO_FILE_PATH);
         return new CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("Name", "GameName", "detail", "goal", "count", "recentReset", "resetType", "todoID"));
     }
 
-    public static void writeTodosToCSV(List<Todo> todos) {
+    public void writeTodosToCSV(List<Todo> todos) {
         try (CSVPrinter csvPrinter = todoCSVPrinter()) {
             for (Todo todo : todos) {
                 csvPrinter.printRecord(todo.getName(), todo.getGameName(), todo.getDetail(), todo.getGoal(), todo.getCount(), todo.getRecentReset(), todo.getResetType(), todo.getTodoID());
@@ -103,22 +109,22 @@ public class PersistenceHandler {
     }
 
     //todo: readGamesFromCSV, parseGames try문 정리
-    public static List<Todo> readTodosFromCSV() {
-        List<Todo> todos = new ArrayList<>();
+    public Map<UUID, Todo> readTodosFromCSV() {
+        Map<UUID, Todo> todoMap = new HashMap<>();
 
         try (FileReader fileReader = new FileReader(TODO_FILE_PATH); CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
             for (CSVRecord record : csvParser) {
                 Todo todo = parseTodos(record);
-                todos.add(todo);
+                todoMap.put(todo.getTodoID(), todo);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return todos;
+        return todoMap;
     }
 
-    private static Todo parseTodos(CSVRecord record) {
+    private Todo parseTodos(CSVRecord record) {
         String name = record.get("Name");
         String gameName = record.get("GameName");
         String detail = record.get("detail");
@@ -130,30 +136,46 @@ public class PersistenceHandler {
         return new Todo(name, gameName, detail, goal, count, recentReset, resetType, todoID);
     }
 
-    private static UUID parseTodoID(String string) {
+    private UUID parseTodoID(String string) {
         return UUID.fromString(string.trim());
     }
 
     public void saveItems(List<Game> games, List<Todo> todos) {
 
         writeGamesToCSV(games);
-        List<Game> integrityCheckGame = readGamesFromCSV(); //Todo: 나중에 tmp파일을 만들어 예외발생시 롤백하도록 구현
         writeTodosToCSV(todos);
-        List<Todo> integrityCheckTodo = readTodosFromCSV();
     }
 
     public void loadItems() { //Todo:메인프레임에 추가하기 전 match 작업
-        if (Files.exists(Path.of(GAME_FILE_PATH))) {
-            List<Game> games = readGamesFromCSV();
+        List<Game> games;
+        Map<String, Game> gameMap;
+        List<Todo> todos;
+        Map<UUID, Todo> todoMap;
+        if (GAME_FILE_EXIST) {
+            gameMap = readGamesFromCSV();
+            games = new ArrayList<>(gameMap.values());
+        } else return;
+        if (TODO_FILE_EXIST) {
+            todoMap = readTodosFromCSV();
+            todos = new ArrayList<>(todoMap.values());
+        } else return;
+
+        if (!games.isEmpty() && !todos.isEmpty()) {
+            for (Todo todo : todos) {
+                Game game = gameMap.get(todo.getGameName());
+                todo.setGame(game);
+                mainFrame.addTodo(todo);
+            }
             for (Game game : games) {
+                ArrayList<UUID> todoIDs = game.getTodoIDs();
+                game.resetIDs();
+                for (UUID todoID : todoIDs) {
+                    Todo todo = todoMap.get(todoID);
+                    game.register(todo);
+                }
                 mainFrame.addGame(game);
             }
         }
-        if (Files.exists(Path.of(TODO_FILE_PATH))) {
-            List<Todo> todos = readTodosFromCSV();
-            for (Todo todo : todos) {
-                mainFrame.addTodo(todo);
-            }
-        }
+
     }
 }
