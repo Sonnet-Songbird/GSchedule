@@ -10,27 +10,27 @@ public class Game {
     private DayOfWeek resetDoW;
     private int resetHour;
     private ArrayList<Todo> todo;
-    private ArrayList<UUID> todoID;
+    private ArrayList<UUID> todoIDs;
 
     public Game(String name, DayOfWeek resetDoW, int resetHour) {
         this.name = name;
         this.resetDoW = resetDoW;
         this.resetHour = resetHour;
         this.todo = new ArrayList<>();
-        this.todoID = new ArrayList<>();
+        this.todoIDs = new ArrayList<>();
     }
 
-    public Game(String name, DayOfWeek resetDoW, int resetHour, ArrayList<UUID> todoID) {
+    public Game(String name, DayOfWeek resetDoW, int resetHour, ArrayList<UUID> todoIDs) {
         this.name = name;
         this.resetDoW = resetDoW;
         this.resetHour = resetHour;
         this.todo = new ArrayList<>();
-        this.todoID = todoID;
+        this.todoIDs = todoIDs;
     }
 
     public void register(Todo todo) {
         this.todo.add(todo);
-        this.todoID.add(todo.getTodoID());
+        this.todoIDs.add(todo.getTodoID());
     }
 
     public LocalDate getAdjustedDate() {
@@ -64,13 +64,13 @@ public class Game {
         return todo;
     }
 
-    public ArrayList<UUID> getTodoID() {
-        return todoID;
+    public ArrayList<UUID> getTodoIDs() {
+        return todoIDs;
     }
 
     public String getTodoIDsAsString() {
         StringJoiner joiner = new StringJoiner(",");
-        for (UUID todoID : todoID) {
+        for (UUID todoID : todoIDs) {
             joiner.add(todoID.toString());
         }
         return joiner.toString();

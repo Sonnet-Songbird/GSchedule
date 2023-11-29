@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainFrame extends JFrame {
+    private static MainFrame instance;
     private final DefaultListModel<Object> todoListModel;
     private final DefaultListModel<Object> gameListModel;
     private final JList<Object> todoJList;
@@ -29,18 +30,19 @@ public class MainFrame extends JFrame {
     private final InfoPanel gameInfo;
     private final JTabbedPane tabbedPane;
 
-    public MainFrame() {
+    private MainFrame() {
         setTitle("GSchedule");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setSize(700, 500);
-
         todoListModel = new DefaultListModel<>();
         gameListModel = new DefaultListModel<>();
         todoJList = new JList<>(todoListModel);
         todoJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         gameJList = new JList<>(gameListModel);
         gameJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        PersistenceHandler ph = PersistenceHandler.getInstance(this);
+        ph.loadGames();
 
         JScrollPane todoList = new JScrollPane(todoJList);
         todoList.setPreferredSize(new Dimension(100, 150));
@@ -117,13 +119,20 @@ public class MainFrame extends JFrame {
         mainPanel.add(resetAllButton, BorderLayout.SOUTH);
 
         add(mainPanel);
-        setVisible(true);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 PersistenceHandler.writeGamesToCSV(getGames());
             }
         });
+        setVisible(true);
+    }
+
+    public static MainFrame getInstance() {
+        if (instance == null) {
+            instance = new MainFrame();
+        }
+        return instance;
     }
 
     private JPanel createGamePanel() {
@@ -219,10 +228,6 @@ public class MainFrame extends JFrame {
 
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new MainFrame();
-            }
-        });
+        SwingUtilities.invokeLater(MainFrame::getInstance);
     }
 }
