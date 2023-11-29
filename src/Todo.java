@@ -28,6 +28,17 @@ public class Todo {
         game.register(this);
     }
 
+    public Todo(String name, String gameName, String detail, int goal, int count, LocalDate recentReset, ResetType resetType, UUID todoID) {
+        this.name = name;
+        this.gameName = gameName;
+        this.detail = detail;
+        this.goal = goal;
+        this.count = count;
+        this.recentReset = recentReset;
+        this.resetType = resetType;
+        this.todoID = todoID;
+    }
+
     public int export() {
         return 0; //Todo: 저장에 성공하면 목록에 추가, 실패하면 GC
 
@@ -36,6 +47,10 @@ public class Todo {
     public void reset() {
         count = 0;
         recentReset = game.getAdjustedDate();
+    }
+
+    public String getGameName() {
+        return gameName;
     }
 
     public void resetAll() {

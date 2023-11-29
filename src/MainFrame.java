@@ -10,6 +10,7 @@
         --게임--
         ----Todo---*/
 //Todo: 게임 더블 클릭 시 해당 게임 탭을 생성하여 해당 게임의 Todo 모아 보기
+//Todo: 로거 사용
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +43,7 @@ public class MainFrame extends JFrame {
         gameJList = new JList<>(gameListModel);
         gameJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         PersistenceHandler ph = PersistenceHandler.getInstance(this);
-        ph.loadGames();
+        ph.loadItems();
 
         JScrollPane todoList = new JScrollPane(todoJList);
         todoList.setPreferredSize(new Dimension(100, 150));
@@ -59,10 +60,8 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getSelectedTabIndex() == 0) {
-                    if (gameListModel.getSize() == 0)
-                        System.out.println("먼저 게임을 추가 해 주세요.");
-                    else
-                        new TodoAddPopup(MainFrame.this, gameListModel);
+                    if (gameListModel.getSize() == 0) System.out.println("먼저 게임을 추가 해 주세요.");
+                    else new TodoAddPopup(MainFrame.this, gameListModel);
                 } else {
                     new GameAddPopup(MainFrame.this);
                 }
@@ -122,7 +121,7 @@ public class MainFrame extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                PersistenceHandler.writeGamesToCSV(getGames());
+                ph.saveItems(getGames(), getTodos());
             }
         });
         setVisible(true);
@@ -160,8 +159,7 @@ public class MainFrame extends JFrame {
     private void removeItem() {
         int selectedIndex = getSelectedIndex();
         if (selectedIndex != -1) {
-            int confirm = JOptionPane.showConfirmDialog(
-                    this, "이 아이템을 삭제하시겠습니까?", "아이템 삭제", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "이 아이템을 삭제하시겠습니까?", "아이템 삭제", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 if (getSelectedTabIndex() == 0) {
                     todoListModel.remove(selectedIndex);
@@ -198,8 +196,7 @@ public class MainFrame extends JFrame {
     }
 
     private void resetAllItems() {
-        int confirm = JOptionPane.showConfirmDialog(
-                this, "모든 아이템을 리셋하시겠습니까?", "모두 리셋", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "모든 아이템을 리셋하시겠습니까?", "모두 리셋", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             //Todo: 모든 item의 객체에 순회하며 reset()
         }
@@ -224,6 +221,15 @@ public class MainFrame extends JFrame {
             games.add((Game) element);
         }
         return games;
+    }
+
+    public List<Todo> getTodos() {
+        List<Todo> todos = new ArrayList<>();
+        for (int i = 0; i < todoListModel.getSize(); i++) {
+            Object element = todoListModel.getElementAt(i);
+            todos.add((Todo) element);
+        }
+        return todos;
     }
 
 

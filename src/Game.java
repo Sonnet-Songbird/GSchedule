@@ -20,7 +20,7 @@ public class Game {
         this.todoIDs = new ArrayList<>();
     }
 
-    public Game(String name, DayOfWeek resetDoW, int resetHour, ArrayList<UUID> todoIDs) {
+    public Game(String name, DayOfWeek resetDoW, int resetHour, ArrayList<UUID> todoIDs) { // 로딩용 생성자
         this.name = name;
         this.resetDoW = resetDoW;
         this.resetHour = resetHour;
@@ -74,5 +74,11 @@ public class Game {
             joiner.add(todoID.toString());
         }
         return joiner.toString();
+    }
+
+    public void matchTodoWithID() {
+        for (UUID todoID : todoIDs) {
+            //todo: todo 로드 떄 todoID를 키로 하는 Map 넘겨받아서 순회하면서 todo에 추가
+        }
     }
 }
