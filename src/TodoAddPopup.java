@@ -2,12 +2,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Optional;
 
 public class TodoAddPopup extends JDialog {
     private final JTextField nameField;
     private final JComboBox<Object> gameComboBox;
     private final JComboBox<Todo.ResetType> resetTypeComboBox;
-    private final JTextField goalField;
+    private final JSpinner goalSpinner;
 
     public TodoAddPopup(MainFrame parentFrame, DefaultListModel<Object> games) {
         super(parentFrame, "할 일 추가", true);
@@ -23,7 +24,8 @@ public class TodoAddPopup extends JDialog {
         resetTypeComboBox = new JComboBox<>(Todo.ResetType.values());
 
         JLabel goalLabel = new JLabel("목표 횟수:");
-        goalField = new JTextField();
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1);
+        goalSpinner = new JSpinner(model);
 
         add(nameLabel);
         add(nameField);
@@ -32,20 +34,16 @@ public class TodoAddPopup extends JDialog {
         add(resetTypeLabel);
         add(resetTypeComboBox);
         add(goalLabel);
-        add(goalField);
+        add(goalSpinner);
 
         JButton addButton = new JButton("게임 추가");
+        JButton cancelButton = new JButton("취소");
 
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Todo newTodo = getTodo();
-                if (newTodo != null) {
-                    parentFrame.addTodo(newTodo);
-                    dispose();
-                }
-            }
-        });
+        addButton.addActionListener(e -> getTodo().ifPresent(newTodo -> {
+            parentFrame.addTodo(newTodo);
+            dispose();
+        }));
+        cancelButton.addActionListener(e -> dispose());
 
         add(addButton);
 
@@ -56,44 +54,22 @@ public class TodoAddPopup extends JDialog {
         setVisible(true);
     }
 
-    public Todo getTodo() {
+    public Optional<Todo> getTodo() {
         String name = nameField.getText();
         Game selectedGame = (Game) gameComboBox.getSelectedItem();
         Todo.ResetType resetType = (Todo.ResetType) resetTypeComboBox.getSelectedItem();
-        int goal = 1; // 기본값
-        String goalText = goalField.getText();
+        int goal = (int) goalSpinner.getValue();
 
-        if (name != null && !name.trim().isEmpty() && selectedGame != null) {
-            if (!goalText.isEmpty()) {
-                if (isInteger(goalText)) {
-                    goal = Integer.parseInt(goalText);
-                } else {
-                    JOptionPane.showMessageDialog(this, "유효하지 않은 숫자입니다.");
-                    return null;
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "이름과 게임은 필수 항목입니다.");
-            return null;
+        if (name.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "이름은 필수 항목입니다.");
+            return Optional.empty();
+        }
+        if (selectedGame == null) {
+            JOptionPane.showMessageDialog(this, "게임은 필수 항목입니다.");
+            return Optional.empty();
         }
 
-        return new Todo(selectedGame, name, goal, resetType);
+        return Optional.of(new Todo(selectedGame, name, goal, resetType));
     }
 
-    private boolean isInteger(String input) {
-        try {
-            Integer.parseInt(input);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                MainFrame.getMainFrame();
-            }
-        });
-    }
 }

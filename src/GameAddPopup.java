@@ -1,16 +1,14 @@
-//Todo: 선택 입력 사항 폰트 수정
-//Todo: Game/Todo 둘 다 시간이나 횟수 등은 spinner로 교체
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.DayOfWeek;
+import java.util.Optional;
 
 public class GameAddPopup extends JDialog {
     private JTextField nameField;
     private JComboBox<DayOfWeek> dayOfWeekComboBox;
-    private JTextField resetHourField;
+    private JSpinner resetHourSpinner;
 
     public GameAddPopup(MainFrame parentFrame) {
         super(parentFrame, "게임 추가", true);
@@ -23,29 +21,27 @@ public class GameAddPopup extends JDialog {
         dayOfWeekComboBox = new JComboBox<>(DayOfWeek.values());
 
         JLabel resetHourLabel = new JLabel("리셋 시간:");
-        resetHourField = new JTextField();
+        SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 23, 1);
+        resetHourSpinner = new JSpinner(model);
 
         add(nameLabel);
         add(nameField);
         add(dayOfWeekLabel);
         add(dayOfWeekComboBox);
         add(resetHourLabel);
-        add(resetHourField);
+        add(resetHourSpinner);
 
         JButton addButton = new JButton("게임 추가");
+        JButton cancelButton = new JButton("취소");
 
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Game newGame = getGame();
-                if (newGame != null) {
-                    parentFrame.addGame(newGame);
-                    dispose();
-                }
-            }
-        });
+        addButton.addActionListener(e -> getGame().ifPresent(newGame -> {
+            parentFrame.addGame(newGame);
+            dispose();
+        }));
+        cancelButton.addActionListener(e -> dispose());
 
         add(addButton);
+        add(cancelButton);
 
         setSize(300, 200);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -54,44 +50,15 @@ public class GameAddPopup extends JDialog {
         setVisible(true);
     }
 
-    public Game getGame() {
+    public Optional<Game> getGame() {
         String name = nameField.getText();
         DayOfWeek resetDoW = (DayOfWeek) dayOfWeekComboBox.getSelectedItem();
-
-        int resetHour = 0;// 기본값
-        String resetHourText = resetHourField.getText();
-
-        if (name != null && !name.trim().isEmpty()) {
-            if (!resetHourText.isEmpty()) {
-                if (isInteger(resetHourText)) {
-                    resetHour = Integer.parseInt(resetHourText);
-                } else {
-                    JOptionPane.showMessageDialog(this, "유효하지 않은 숫자입니다.");
-                    return null;
-                }
-            }
-        } else {
+        if (name == null || name.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "이름은 필수 항목입니다.");
-            return null;
+            return Optional.empty();
         }
+        int resetHour = (int) resetHourSpinner.getValue();
 
-        return new Game(name, resetDoW, resetHour);
-    }
-
-    private boolean isInteger(String input) {
-        try {
-            Integer.parseInt(input);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                MainFrame.getMainFrame();
-            }
-        });
+        return Optional.of(new Game(name, resetDoW, resetHour));
     }
 }
