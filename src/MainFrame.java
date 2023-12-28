@@ -62,8 +62,11 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getSelectedTabIndex() == 0) {
-                    if (gameListModel.getSize() == 0) JOptionPane.showMessageDialog(mainFrame, "먼저 게임을 추가 해 주세요.");
-                    else new TodoAddPopup(MainFrame.this, gameListModel);
+                    if (gameListModel.getSize() == 0) {
+                        JOptionPane.showMessageDialog(mainFrame, "먼저 게임을 추가 해 주세요.");
+                        tabbedPane.setSelectedIndex(1);
+                        new GameAddPopup(MainFrame.this);
+                    } else new TodoAddPopup(MainFrame.this, gameListModel);
                 } else {
                     new GameAddPopup(MainFrame.this);
                 }
